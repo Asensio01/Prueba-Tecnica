@@ -1,39 +1,126 @@
-# SecureMap
+# Prueba-Tecnica
 
-Aplicación web con Laravel 12 + SQLite + Leaflet para gestión de marcadores arrastrables con guardado asíncrono en tiempo real.
+Este repositorio contiene el proyecto **SecureMap**, una aplicación web desarrollada con el framework Laravel.
 
-## Funcionalidades entregadas
+## Descripción del Proyecto
 
-- Registro e inicio de sesión de usuarios.
-- Rutas protegidas por sesión (`auth`) para el panel de mapa.
-- API protegida por token Bearer con Laravel Sanctum (`auth:sanctum`).
-- Mapa interactivo con Leaflet y marcadores `draggable`.
-- Persistencia con Eloquent y migraciones sobre SQLite.
-- Cifrado en datos sensibles:
-  - Contraseñas con hash seguro de Laravel.
-  - Etiqueta de marcador cifrada en base de datos (`encrypted cast`).
-  - Sesión cifrada (`SESSION_ENCRYPT=true`).
+SecureMap es una aplicación diseñada para **gestionar y visualizar ubicaciones (marcadores) de forma segura**, permitiendo crear, editar, mover (drag) y eliminar puntos en un mapa. Los cambios se persisten en base de datos y se reflejan en la UI con sincronización asíncrona.
 
-## Agregados creativos
+El proyecto está estructurado como una aplicación Laravel estándar y utiliza las siguientes tecnologías:
 
-- Eliminación rápida por clic derecho sobre marcador.
-- Botón para crear marcador en el centro del mapa.
-- Métricas en vivo: cantidad de marcadores, hora de última sincronización y distancia total aproximada entre puntos.
-- UI responsive con animaciones de entrada y panel operativo.
+- **Backend:** PHP / Laravel 12
+- **Frontend:** Blade, CSS, JavaScript (Vite)
+- **Mapa:** Leaflet
+- **DB (local):** SQLite (por defecto)
+- **Gestor de dependencias:** Composer y NPM
+
+### Seguridad / Buenas prácticas incluidas
+
+- Autenticación web con sesión y rutas protegidas (`auth`) para el panel del mapa.
+- API protegida con tokens Bearer usando Laravel Sanctum (`auth:sanctum`).
+- Cifrado de datos sensibles:
+	- Contraseñas con hash seguro de Laravel.
+	- Etiqueta del marcador cifrada en base de datos (cast `encrypted`).
+	- Sesión cifrada (`SESSION_ENCRYPT=true`).
+
+## Estructura del Repositorio
+
+El código fuente de la aplicación se encuentra dentro del directorio `SecureMap/`.
+
+- `app/`: Código principal (modelos, controladores, etc.).
+- `bootstrap/`: Scripts de arranque de la aplicación.
+- `config/`: Archivos de configuración.
+- `database/`: Migraciones y seeders.
+- `public/`: Punto de entrada y assets compilados.
+- `resources/`: Vistas Blade y assets sin compilar.
+- `routes/`: Definición de rutas web y API.
+- `storage/`: Cache, logs, sesiones, etc.
+- `tests/`: Pruebas automatizadas.
+- `composer.json`: Dependencias PHP.
+- `package.json`: Dependencias JS/CSS.
+
+## Requisitos Previos
+
+- PHP (versión compatible con `composer.json`)
+- Composer
+- Node.js y npm
+- SQLite
 
 ## Instalación
 
-1. Instalar dependencias:
-	- `composer install`
-	- `npm install`
-2. Configurar entorno:
-	- Verifica `.env` con `DB_CONNECTION=sqlite`
-	- Asegura la existencia de `database/database.sqlite`
-3. Ejecutar migraciones:
-	- `php artisan migrate`
-4. Levantar aplicación:
-	- `php artisan serve`
-	- `npm run dev`
+1. **Clona el repositorio:**
+	 ```bash
+	 git clone https://github.com/Asensio01/Prueba-Tecnica.git
+	 cd Prueba-Tecnica/SecureMap
+	 ```
+
+2. **Instala dependencias de PHP:**
+	 ```bash
+	 composer install
+	 ```
+
+3. **Instala dependencias de JavaScript:**
+	 ```bash
+	 npm install
+	 ```
+
+4. **Configura el entorno:**
+	 - Copia el archivo de ejemplo:
+		 ```bash
+		 cp .env.example .env
+		 ```
+	 - Genera la clave de la app:
+		 ```bash
+		 php artisan key:generate
+		 ```
+
+5. **Configura base de datos (SQLite recomendado):**
+	 - En `.env`:
+		 ```env
+		 DB_CONNECTION=sqlite
+		 ```
+	 - Asegura la existencia del archivo:
+		 ```bash
+		 # Windows: crea el archivo si no existe
+		 type nul > database/database.sqlite
+		 ```
+
+6. **Ejecuta migraciones:**
+	 ```bash
+	 php artisan migrate
+	 ```
+
+7. **Compila assets y levanta el entorno:**
+	 - En una terminal:
+		 ```bash
+		 npm run dev
+		 ```
+	 - En otra terminal:
+		 ```bash
+		 php artisan serve
+		 ```
+
+Accede a la app en `http://127.0.0.1:8000`.
+
+## Uso
+
+1. Regístrate o inicia sesión.
+2. Entra al panel del mapa (`/map`).
+3. Crea marcadores:
+	 - Click en el mapa, o
+	 - Botón para crear marcador en el centro.
+4. Edita un marcador desde su popup:
+	 - Nombre (label)
+	 - Prioridad (baja / media / alta)
+	 - Color
+5. Mueve un marcador arrastrándolo: al soltar se actualizan coordenadas.
+6. Elimina un marcador con clic derecho.
+
+### Métricas en vivo
+
+- Cantidad de marcadores.
+- Distancia total aproximada entre puntos.
+- Hora en vivo: muestra la **hora según la ubicación del marcador seleccionado** (zona horaria calculada por lat/lng).
 
 ## Endpoints principales
 
@@ -64,6 +151,14 @@ Aplicación web con Laravel 12 + SQLite + Leaflet para gestión de marcadores ar
 ## Validación rápida
 
 - Pruebas base:
-  - `php artisan test`
-- Revisar rutas:
-  - `php artisan route:list`
+	- `php artisan test`
+- Ver rutas:
+	- `php artisan route:list`
+
+## Contribuciones
+
+1. Haz un fork del repositorio.
+2. Crea una rama (`git checkout -b feature/nueva-funcionalidad`).
+3. Realiza tus cambios y haz commit (`git commit -am "Añade nueva funcionalidad"`).
+4. Haz push a la rama (`git push origin feature/nueva-funcionalidad`).
+5. Abre un Pull Request.
