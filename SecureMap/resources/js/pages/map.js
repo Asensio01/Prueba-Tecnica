@@ -1,3 +1,5 @@
+import tzlookup from 'tz-lookup';
+
 const initMapPage = () => {
     const statusEl = document.getElementById('status');
     const statusIconEl = document.getElementById('status-icon');
@@ -54,7 +56,7 @@ const initMapPage = () => {
         zoomSnap: 0.5,
     }).setView([40.4168, -3.7038], 6);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
@@ -75,6 +77,81 @@ const initMapPage = () => {
     const distanceEl = document.getElementById('distance-total');
     const markerListEl = document.getElementById('marker-list');
     const syncDotEl = document.getElementById('sync-dot');
+
+    const tzLabelEl = document.getElementById('tz-label');
+    let clockTimer = null;
+    let activeMarkerId = null;
+    let activeTimeZone = null;
+
+    const formatTimeInZone = (date, timeZone) => {
+        return new Intl.DateTimeFormat('es-ES', {
+            timeZone,
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        }).format(date);
+    };
+
+    const formatZoneOffset = (date, timeZone) => {
+        try {
+            // En navegadores modernos devuelve algo como "GMT-6".
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone,
+                timeZoneName: 'shortOffset',
+            }).formatToParts(date);
+            const tzName = parts.find(p => p.type === 'timeZoneName')?.value;
+            if (!tzName) return '';
+            return tzName.replace('GMT', 'UTC');
+        } catch {
+            return '';
+        }
+    };
+
+    const setTimeZoneLabel = () => {
+        if (!tzLabelEl) return;
+
+        if (!activeTimeZone) {
+            tzLabelEl.textContent = 'Selecciona un punto';
+            return;
+        }
+
+        const offset = formatZoneOffset(new Date(), activeTimeZone);
+        tzLabelEl.textContent = offset ? `${activeTimeZone} ${offset}` : activeTimeZone;
+    };
+
+    const paintClock = () => {
+        if (!lastSyncEl) return;
+
+        if (!activeTimeZone) {
+            lastSyncEl.textContent = 'Sin seleccionar';
+            return;
+        }
+
+        lastSyncEl.textContent = formatTimeInZone(new Date(), activeTimeZone);
+    };
+
+    const startClock = () => {
+        if (!lastSyncEl) return;
+        if (clockTimer) clearInterval(clockTimer);
+        paintClock();
+        clockTimer = setInterval(paintClock, 1000);
+    };
+
+    const setActiveMarkerTimeZoneFromLatLng = (lat, lng, markerId = null) => {
+        if (typeof markerId === 'number' || typeof markerId === 'string') {
+            activeMarkerId = markerId;
+        }
+
+        try {
+            activeTimeZone = tzlookup(lat, lng);
+        } catch {
+            activeTimeZone = null;
+        }
+
+        setTimeZoneLabel();
+        startClock();
+    };
 
     /* ── PRIORITY META ── */
     const priorityMeta = {
@@ -125,7 +202,7 @@ const initMapPage = () => {
         syncDotEl.classList.remove('live');
         setTimeout(() => {
             syncDotEl.classList.add('live');
-            lastSyncEl.textContent = new Date().toLocaleTimeString('es-ES', { hour12: false });
+            paintClock();
         }, 200);
     };
 
@@ -174,6 +251,7 @@ const initMapPage = () => {
                 li.style.borderLeftColor = color;
                 map.flyTo([ll.lat, ll.lng], 15, { duration: 0.6 });
                 marker.openPopup();
+                setActiveMarkerTimeZoneFromLatLng(ll.lat, ll.lng, id);
                 setStatus(`Navegando a "${data.label}".`);
             });
             markerListEl.appendChild(li);
@@ -305,10 +383,17 @@ const initMapPage = () => {
         }, 600);
 
         marker.on('drag', pushCoords);
-        marker.on('dragend', pushCoords);
+        marker.on('dragend', () => {
+            pushCoords();
+            if (activeMarkerId === id) {
+                const ll = marker.getLatLng();
+                setActiveMarkerTimeZoneFromLatLng(ll.lat, ll.lng, id);
+            }
+        });
         marker.on('click', () => {
             const ll = marker.getLatLng();
             map.flyTo([ll.lat, ll.lng], 16, { duration: 0.45 });
+            setActiveMarkerTimeZoneFromLatLng(ll.lat, ll.lng, id);
             setStatus(`Marcador "${data.label}" enfocado.`);
         });
         marker.on('contextmenu', async () => {
@@ -374,6 +459,10 @@ const initMapPage = () => {
     };
 
     /* ── BOOT ── */
+    // Reloj en zona del marcador seleccionado
+    setTimeZoneLabel();
+    startClock();
+
     initialMarkers.forEach((m) => buildMarker(m));
 
     if (initialMarkers.length > 0) {

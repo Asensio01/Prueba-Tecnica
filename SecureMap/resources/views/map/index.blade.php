@@ -58,7 +58,7 @@
                         <div class="sync-dot" id="sync-dot"></div>
                         <span id="last-sync">Sin sincronizar</span>
                     </div>
-                    <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">UTC+0</span>
+                    <span id="tz-label" style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">UTC</span>
                 </div>
             </div>
         </div>
