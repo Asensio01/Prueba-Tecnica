@@ -310,6 +310,10 @@ const initMapPage = () => {
             const btn = document.querySelector(`[data-save="${id}"]`);
             if (!editor || !btn) return;
 
+
+            if (editor.dataset.bound === '1') return;
+            editor.dataset.bound = '1';
+
             const collect = () => ({
                 label: editor.querySelector('[data-field="label"]').value.trim() || 'Sin nombre',
                 priority: editor.querySelector('[data-field="priority"]').value,
@@ -341,7 +345,9 @@ const initMapPage = () => {
                     renderMarkerList();
                     touchSync();
                     if (!silent) setStatus('Cambios guardados correctamente.');
-                    marker.openPopup();
+                    
+                    marker.closePopup();
+                    window.setTimeout(() => marker.openPopup(), 0);
                 } catch (err) {
                     setStatus(err.message, 'error');
                 } finally {
@@ -362,7 +368,7 @@ const initMapPage = () => {
             });
             labelEl.addEventListener('blur', () => applyUpdate(true));
             colorEl.addEventListener('blur', () => applyUpdate(true));
-            btn.addEventListener('click', () => applyUpdate(false), { once: true });
+            btn.addEventListener('click', () => applyUpdate(false));
         });
     };
 
